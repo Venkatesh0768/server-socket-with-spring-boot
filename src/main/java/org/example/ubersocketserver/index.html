@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>WebSocket Demo</title>
+
+    <!-- ✅ Corrected CDN links -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<div>
+    <button onclick="connect()">Connect</button>
+</div>
+
+<div>
+    <input type="text" id="name" placeholder="Enter message" />
+    <button onclick="submit()">Submit</button>
+</div>
+
+<div>
+    <h3>Messages:</h3>
+    <ul id="messages"></ul>
+</div>
+
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const socket = new SockJS("http://localhost:8080/ws");
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function () {
+            console.log("Connected");
+            stompClient.subscribe("/topic/ping" , function(message){
+                console.log("Received a new Message from the server" + message);
+
+            })
+
+            stompClient.subscribe("/topic/scheduled" , function(message){
+                console.log("Received a new Message from the server" + message);
+                const li = document.createElement("li");
+                li.textContent = message.body;
+                document.getElementById("messages").appendChild(li);
+
+            })
+        });
+    }
+
+    function submit(){
+        const value =  document.getElementById("name").value;
+        stompClient.send("/app/ping" , {} , JSON.stringify({data : value}))
+    }
+
+
+</script>
+</body>
+</html>
